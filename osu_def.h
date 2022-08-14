@@ -73,7 +73,7 @@ namespace osu {
 struct osu_mouse_handler {
 	u32 vtable;
 	int was_active;
-	float position[2];
+	vec2 position;
 
 	int previous_native_mouse_position[4];
 
@@ -922,7 +922,12 @@ struct menu_object {
 		if (slider.snap_to_int)
 			return std::string(name) + ": " + std::to_string(int(v));
 
-		return std::string(name) + ": " + std::to_string(v);
+		std::string str{ std::to_string(v) };
+
+		if (auto i{ str.find('.')}; i != std::string::npos)
+			str.resize(std::min(i + 3, str.size()));
+
+		return std::string(name) + ": " + str;
 	}
 
 };

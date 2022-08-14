@@ -35,7 +35,7 @@ void __fastcall __update_is_playing(){
 	if (virtual_mouse.active)
 		osu::MouseManager_SetPosition(virtual_mouse.pos);
 
-	AQM::update_slider(virtual_mouse.raw_pos);
+	AQM::update_slider(osu_data.raw_mouse_pos);
 
 	OSU_Player_UpdateIsPlaying();
 }

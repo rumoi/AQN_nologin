@@ -22,7 +22,7 @@ namespace autobot {
 
 		for (size_t i{}, size{ screen_notes ? screen_notes->_size : 0 }; i < size; ++i) {
 
-			const osu_Hitobject* note = screen_notes->_items->data[i];
+			const auto* note = screen_notes->_items->data[i];
 
 			if (note == 0 || note->is_hit)
 				continue;
@@ -30,7 +30,7 @@ namespace autobot {
 			if ((press_delta + time - note->time[0]) < 0)
 				break;
 
-			vec2 target_pos{ note->pos.x, note->pos.y };
+			vec2 target_pos{ note->pos };
 
 			if (note->type & Slider) {
 
@@ -70,7 +70,7 @@ namespace autobot {
 
 			virtual_mouse.active = 1;
 
-			virtual_mouse.pos = osu_window::field_to_display(target_pos.x, target_pos.y);
+			virtual_mouse.pos = osu_window::field_to_display(target_pos);
 
 			break;
 

@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+#define INLINE __forceinline
+
 typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
@@ -43,16 +45,43 @@ public:
 	return std::string_view(_Str, _Len);
 }
 
+template<typename T>
+constexpr _inline T pow2(T v) { return v * v; }
+
+template<typename T>
+constexpr _inline T q_fabs(const T x) {
+
+	if constexpr (std::is_same<T, float>::value)
+		return std::bit_cast<T>(std::bit_cast<u32>(x) & 0x7FFFFFFF);
+
+	if constexpr (std::is_same<T, double>::value)
+		return std::bit_cast<T>(std::bit_cast<u64>(x) & 0x7FFFFFFFFFFFFFFF);
+}
+
 struct vec2 {
 
 	float x, y;
 
-	vec2 operator-(const vec2 v) const{
+	INLINE vec2 operator-(const vec2 v) const{
 		return { x - v.x, y - v.y };
 	}
-	vec2 operator+(const vec2 v) const {
+	INLINE vec2 operator+(const vec2 v) const {
 		return { x + v.x, y + v.y };
 	}
+	INLINE vec2 operator*(const float scalar) const {
+		return { x * scalar, y * scalar };
+	}
+
+	INLINE float square() const {
+		return x * x + y * y;
+	}
+	INLINE float dot(const vec2 v) const {
+		return x * v.x + y * v.y;
+	}
+
+	float& operator[](const size_t i) { return i ? y : x; }
+	float operator[](const size_t i) const { return i ? y : x; }
+
 
 };
 struct vec3 {

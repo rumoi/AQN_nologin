@@ -45,6 +45,8 @@ struct {
 
 	u32 keybinding_ptr;
 
+	vec2 raw_mouse_pos;
+
 	struct {
 
 		char K1{ 'Z' }, K2{ 'X' };
@@ -79,7 +81,6 @@ struct {
 	bool active;
 
 	vec2 pos;
-	vec2 raw_pos;
 
 } virtual_mouse;
 
@@ -97,10 +98,8 @@ struct {
 
 void __fastcall mouse_hook(osu_mouse_handler* handler) {
 
-	if (handler) {
-		virtual_mouse.raw_pos.x = handler->position[0];
-		virtual_mouse.raw_pos.y = handler->position[1];
-	}
+	if (handler)
+		osu_data.raw_mouse_pos = handler->position;
 
 	OSU_MouseManager_ApplyHandler(handler);
 }

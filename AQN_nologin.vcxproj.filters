@@ -56,5 +56,8 @@
     <ClInclude Include="osu_enum.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="modules\aim_assist.h">
+      <Filter>Header Files\modules</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

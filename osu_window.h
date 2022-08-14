@@ -35,11 +35,12 @@ namespace osu_window {
 
 	}
 
+	const vec2 field_to_display(vec2 x) {
+		return playfield_offset + x * game_ratio;
+	}
+
 	const vec2 field_to_display(float x, float y) {
-		return vec2{
-			x * game_ratio + playfield_offset.x,
-			y * game_ratio + playfield_offset.y
-		};
+		return field_to_display({x,y});
 	}
 
 };

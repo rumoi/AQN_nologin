@@ -148,6 +148,7 @@
     <ClInclude Include="def.h" />
     <ClInclude Include="init.h" />
     <ClInclude Include="mem.h" />
+    <ClInclude Include="modules\aim_assist.h" />
     <ClInclude Include="modules\modules.h" />
     <ClInclude Include="modules\autobot.h" />
     <ClInclude Include="modules\timewarp.h" />
