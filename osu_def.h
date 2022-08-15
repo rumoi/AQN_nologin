@@ -964,7 +964,7 @@ struct osu_Hitobject : osu_HitobjectBase {
 	net_string* sample_file;
 	net_list<pSprite*>* last_kiai_sprites;
 
-	int hit_vaule;
+	int hit_value;
 
 	int combo_offset;
 	int combo_colour_index;
@@ -1483,7 +1483,7 @@ struct osu_GameMode_Player : osu_GameMode {
 	pSprite* pause_back;
 	void* progress_bar;
 
-	void* ruleset;// really useful
+	osu_Ruleset* ruleset;
 
 	pSprite* s_break_fail;
 	pSprite* s_break_pass;

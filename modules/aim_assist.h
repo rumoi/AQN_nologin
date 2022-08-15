@@ -45,8 +45,8 @@ namespace aim_assist {
 
 				const float extra{ std::clamp(t - 1.f, 0.f, 1.f) };
 
-				assist_factor = 0.35 + ((0.4 - 0.35) * extra);
-				assist_max_distance = 8. + ((10. - 8.) * extra);
+				assist_factor = 0.35f + ((0.4f - 0.35f) * extra);
+				assist_max_distance = 8.f + ((10.f - 8.f) * extra);
 
 			}
 
@@ -239,7 +239,7 @@ namespace aim_assist {
 			const float radius = R - R * (std::clamp<float>(note->time[0] - *osu_data.time, 0, arms) / arms);
 
 			if (radius <= 0.f)
-				return;
+				break;
 
 			state.active = 1;
 
