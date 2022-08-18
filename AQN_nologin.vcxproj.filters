@@ -62,5 +62,8 @@
     <ClInclude Include="modules\enlighten.h">
       <Filter>Header Files\modules</Filter>
     </ClInclude>
+    <ClInclude Include="modules\CTB_assist.h">
+      <Filter>Header Files\modules</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

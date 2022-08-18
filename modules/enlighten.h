@@ -4,8 +4,6 @@ namespace enlighten {
 
 	constexpr static u32 MODULE_ID{ 3 };
 
-	u8 active{1};
-
 	float AR{ 0.f }, OD{ 0.f }, CS{ 0.f }, HP{0.f};
 
 	bool is_active() {
@@ -32,7 +30,7 @@ namespace enlighten {
 
 	void __fastcall tick() {
 
-		if (loaded || is_active() == 0 || *osu_data.mode != 2)
+		if (loaded || is_active() == 0)
 			return;
 
 		const auto gamemode = (osu_GameMode_Player*)osu_data.running_gamemode[0];
@@ -40,12 +38,12 @@ namespace enlighten {
 		if (gamemode->async_load_complete == 0 || gamemode->game->is_unsafe() || gamemode->hitobject_manager == 0)
 			return;
 
+		loaded = 1;
+
 		size_t func = (size_t)gamemode->hitobject_manager->vtable;
 
 		func = *(size_t*)(func + 0x30);
 		func += 0x10;
-
-		loaded = 1;
 
 		OSU_HitObjectManager_UpdateVariables = (_osufunc_HitObjectManager_UpdateVariables)*(size_t*)func;
 
@@ -88,7 +86,7 @@ namespace enlighten {
 
 	const auto initialized = [] {
 
-		on_audio_tick[MODULE_ID] = tick;
+		on_audio_tick_ingame[MODULE_ID] = tick;
 		on_menu_init[MODULE_ID] = menu_init;
 
 		return 1;

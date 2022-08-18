@@ -8,6 +8,8 @@ void __fastcall __update_is_playing(){
 
 	AQM::init();
 
+	ZeroMemory(&virtual_keyboard, sizeof(virtual_keyboard));
+
 	for (auto f : on_audio_tick)
 		if (f) f();
 
@@ -45,8 +47,6 @@ void __fastcall on_menu_change() {
 	const auto queued_mode = *(osu_data.mode - 1);
 
 	osu_window::resize();// could add this to the window on change event.
-	
-	ZeroMemory(&virtual_keyboard, sizeof(virtual_keyboard));
 
 	osu_data.update_keybinds();
 

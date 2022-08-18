@@ -47,9 +47,16 @@ struct {
 
 	vec2 raw_mouse_pos;
 
+	u8 raw_keyboardinputs[256];
+
 	struct {
 
 		char K1{ 'Z' }, K2{ 'X' };
+
+		struct {
+			char dash{ (char)VK_LSHIFT }, left{ (char)VK_LEFT }, right{ (char)VK_RIGHT };
+		} CTB;
+
 
 	} binding{};
 
@@ -60,6 +67,10 @@ struct {
 
 		binding.K1 = *(int*)(t + 0x14);
 		binding.K2 = *(int*)(t + 0x24);
+
+		binding.CTB.dash = *(int*)(t + 0x44);
+		binding.CTB.left = *(int*)(t + 0x54);
+		binding.CTB.right = *(int*)(t + 0x64);
 
 	}
 
@@ -87,8 +98,12 @@ struct {
 struct {
 
 	u32 active:1,
-		K1 : 1, K2 : 1, smoke:1,		
+		K1 : 2, K2 : 2, smoke:1,		
 		escape : 1, restart : 1;
+
+	struct {
+		u8 dash : 1, left : 2, right : 2;
+	} CTB;
 
 } virtual_keyboard;
 
@@ -113,16 +128,25 @@ bool __fastcall __GetKeyboardState(u8* state) {
 
 	u8* v = state + 8;
 
+	memcpy(osu_data.raw_keyboardinputs, v, 256);
+
+	const auto update_key = [v](int value, u8 key) {
+
+		if (value == 1) v[key] = 128;
+		else if (value == 2) v[key] = 0;
+
+	};
+
 	if (virtual_keyboard.active) {
 
-		if (virtual_keyboard.escape)
-			v[VK_ESCAPE] = 128;
+		update_key(virtual_keyboard.escape, v[VK_ESCAPE]);
 
-		if (virtual_keyboard.K1)
-			v[osu_data.binding.K1] = 128;
+		update_key(virtual_keyboard.K1, v[osu_data.binding.K1]);
+		update_key(virtual_keyboard.K2, v[osu_data.binding.K2]);
 
-		if (virtual_keyboard.K2)
-			v[osu_data.binding.K2] = 128;
+		update_key(virtual_keyboard.CTB.dash, osu_data.binding.CTB.dash);
+		update_key(virtual_keyboard.CTB.left, osu_data.binding.CTB.left);
+		update_key(virtual_keyboard.CTB.right, osu_data.binding.CTB.right);
 
 	}
 

@@ -47,6 +47,18 @@ struct net_string {
 	u32 size;
 	u16 text[1];
 
+	bool starts_with(std::string_view s) const{
+
+		if (this == 0 || size < s.size())
+			return 0;
+		
+		for (size_t i{}; i < s.size(); ++i)
+			if (char(text[i]) != s[i])
+				return 0;
+
+		return 1;
+	}
+
 };
 
 struct net_event_handler {
@@ -79,7 +91,20 @@ struct osu_mouse_handler {
 
 };
 
-struct pTexture {};
+struct pTexture {
+
+	u32 vtable;
+
+	net_string* filename;
+	net_string* assest_name;
+	u32 containing_atlas;
+	u32 texture_GL;
+	int last_access;
+	SkinSource source;
+	int DPI_scale;
+	u8 is_disposed, track_access_time, disposable;
+
+};
 
 struct pTransformation {
 
@@ -787,7 +812,7 @@ struct sprite_manager {
 	u8 handle_input;
 	u8 masking;
 	u8 widescreen_auto_offset;
-	u8 calculcate_invisible_updates;
+	u8 calculate_invisible_updates;
 	u8 is_widescreen;
 	u8 is_disposed;
 	u8 allow_rewind;
@@ -992,6 +1017,27 @@ struct osu_Hitobject : osu_HitobjectBase {
 };
 
 struct osu_Hitobject_HitCircleOsu : osu_Hitobject {
+
+};
+struct osu_Hitobject_HitCircleFruits : osu_Hitobject {
+
+	pSprite* sprite_hitcircle[2];
+
+	osu_Hitobject* hyper_dash_target;
+	pSprite* sprite_hyper_dash;
+	float distance_to_hyper;
+	u8 valid_hit;
+	u8 new_combo;
+	u8 _pad2[2];
+	vec2 catch_offset;
+
+	bool is_banana() const{ // Really peppy?
+
+		if (this == 0 || sprite_hitcircle[0] == 0 || sprite_hitcircle[0]->texture == 0)
+			return 0;
+
+		return sprite_hitcircle[0]->texture->filename->starts_with("fruit-banana"sv);
+	}
 
 };
 
@@ -1252,6 +1298,33 @@ struct osu_Hitobject_Manager : osu_Hitobject_Manager_Base {
 	int hit_objects_count;
 	u8 bookmarks_dont_delete;
 
+	osu_Hitobject* get_top_note(const u32 note_ptr = 0) const{
+
+		if (this == 0 || hit_objects_minimal == 0 || hit_objects_minimal->_items == 0)
+			return 0;
+
+		bool started{ note_ptr == 0 };
+
+		for (size_t i{}, size{ hit_objects_minimal->_size }; i < size; ++i) {
+
+			auto* o = hit_objects_minimal->_items->data[i];
+
+			if (started == 0) {
+				started = u32(o) == note_ptr;
+				continue;
+			}
+
+			if (o == 0 || o->is_hit)
+				continue;
+
+			return o;
+
+		}
+
+		return 0;
+
+	}
+
 };
 
 
@@ -1337,9 +1410,13 @@ struct osu_Ruleset {
 	int total_hits_possible;
 	int combo_burst_number;
 	int hax_check_count;
+
+	int unk;
+
 	u8 is_initialized;
 	u8 new_flashlight_overlay;
 	u8 _pad0[2];
+
 	vec2 mouse_last_position;
 
 };
@@ -1351,6 +1428,41 @@ struct osu_RulesetOsu : osu_Ruleset {
 	pTexture* t_smoke;
 
 };
+
+struct osu_RulesetFruits : osu_Ruleset {
+
+	net_list<osu_Hitobject_HitCircleFruits*>* caught_fruits;
+	net_list<pSprite*>* caught_sprite;
+
+	pAnimation* catcher1;
+	int combo_counter_fruits;
+	int catcher_idle;
+	int catcher_fail;
+	int catcher_kiai;
+	osu_Hitobject* special_movement_next_fruit;
+	float check_position;
+	float catcher_width;
+	float catcher_width_half;
+	float catcher_margin;
+	float base_movement_speed;
+	float special_movement_modifier;
+
+	int special_movement_direction;
+	int important_frame_check;
+	int last_dash_sprite_time;
+
+	u8 important_frame;
+	u8 special_waiting_state;
+	u8 dashing;
+	u8 left_pressed;
+	u8 right_pressed;
+	u8 special_state_colour_change;
+	u8 _pad1[2];
+
+	vec2 catcher_position_last_frame;
+
+};
+
 
 struct osu_GameMode_SongSelect : osu_GameMode {
 
@@ -1606,5 +1718,9 @@ struct osu_GameMode_Player : osu_GameMode {
 	float pause_location[2];
 	void* star_break_additive;
 };
+
+constexpr auto dsuysais{ offsetof(osu_RulesetFruits, catcher1) };
+constexpr auto dsuysais23{ offsetof(osu_RulesetFruits, new_flashlight_overlay) };
+constexpr auto dsuysai22{ offsetof(osu_GameMode_Player, ruleset) };
 
 #pragma pack(pop)

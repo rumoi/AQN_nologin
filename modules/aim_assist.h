@@ -201,20 +201,12 @@ namespace aim_assist {
 		if ((hit_manager = gamemode->hitobject_manager) == 0)
 			return;
 
-		const auto* screen_notes = hit_manager->hit_objects_minimal;
+		auto* note = hit_manager->get_top_note();
 
-		if (screen_notes == 0 || screen_notes->_size == 0)
+		if (note == 0 || note->type & Spinner)
 			return;
 
-		for (size_t i{}, size{ screen_notes->_size }; i < size; ++i) {
-
-			const auto* note = screen_notes->_items->data[i];
-
-			if (note == 0 || note->is_hit)
-				continue;
-
-			if (note->type & Spinner)
-				break;
+		{
 
 			state.assist_pos = note->pos;
 
@@ -228,7 +220,7 @@ namespace aim_assist {
 			}
 
 			state.assist_pos = osu_window::field_to_display(state.assist_pos);
-			
+
 			const float arms = (float)hit_manager->pre_empt;
 
 			const auto max_distance_scaled = state.assist_max_distance * osu_window::game_ratio;
@@ -239,7 +231,7 @@ namespace aim_assist {
 			const float radius = R - R * (std::clamp<float>(note->time[0] - *osu_data.time, 0, arms) / arms);
 
 			if (radius <= 0.f)
-				break;
+				return;
 
 			state.active = 1;
 
@@ -248,9 +240,7 @@ namespace aim_assist {
 			state.deadzone_outter = hit_object_radius_scaled + state.assist_max_distance;
 			state.assist_note_id = (u32)&note;
 
-			break;
 		}
-
 	}
 
 	void __fastcall menu_init() {

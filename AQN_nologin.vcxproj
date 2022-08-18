@@ -149,6 +149,7 @@
     <ClInclude Include="init.h" />
     <ClInclude Include="mem.h" />
     <ClInclude Include="modules\aim_assist.h" />
+    <ClInclude Include="modules\CTB_assist.h" />
     <ClInclude Include="modules\enlighten.h" />
     <ClInclude Include="modules\modules.h" />
     <ClInclude Include="modules\autobot.h" />

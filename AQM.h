@@ -158,6 +158,7 @@ namespace AQM {
 
 		sprite_cursor_layer[0]->handle_input = 1;
 		sprite_cursor_layer[0]->handle_overlay_input = 1;
+		sprite_cursor_layer[0]->calculate_invisible_updates = 1; // Tard wrangling for CTB/Taiko/Mania
 
 		AQM_base.reserve(64);
 
