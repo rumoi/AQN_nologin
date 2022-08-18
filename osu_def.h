@@ -5,10 +5,21 @@
 #pragma pack(push)
 #pragma pack(1)
 
+struct _vtable {
+
+	u32 ptr;
+
+	u32& get_virtual(const u32 index){
+		u32* func = *(u32**)(ptr + 0x30);
+		return func[index];
+	}
+
+};
+
 template<typename T>
 struct net_array {
 
-	u32 vtable;
+	_vtable vtable;
 	u32 size;
 	T data[1];
 
@@ -17,7 +28,7 @@ struct net_array {
 template<typename T>
 struct net_list {
 
-	u32 vtable;
+	_vtable vtable;
 	net_array<T>* _items;
 	void* _sync_root;
 	u32 _size;
@@ -37,13 +48,13 @@ struct net_list {
 };
 
 struct net_drawing_rectangle {
-	u32 vtable;
+	_vtable vtable;
 	int x, y, width, height;
 };
 
 struct net_string {
 
-	u32 vtable;
+	_vtable vtable;
 	u32 size;
 	u16 text[1];
 
@@ -62,7 +73,7 @@ struct net_string {
 };
 
 struct net_event_handler {
-	u32 vtable;
+	_vtable vtable;
 
 	void* _target;
 	void* _method_base;
@@ -83,7 +94,7 @@ namespace osu {
 }
 
 struct osu_mouse_handler {
-	u32 vtable;
+	_vtable vtable;
 	int was_active;
 	vec2 position;
 
@@ -93,7 +104,7 @@ struct osu_mouse_handler {
 
 struct pTexture {
 
-	u32 vtable;
+	_vtable vtable;
 
 	net_string* filename;
 	net_string* assest_name;
@@ -108,7 +119,7 @@ struct pTexture {
 
 struct pTransformation {
 
-	u32 vtable;
+	_vtable vtable;
 
 	union {
 		float start_float;
@@ -142,7 +153,7 @@ struct osu_rect {
 
 struct pSprite {
 
-	u32 vtable;
+	_vtable vtable;
 
 	net_list<pTransformation*>* effect;
 	net_list<pTransformation*>* effect_loop;
@@ -300,36 +311,22 @@ struct pText : pSprite {
 
 		text->text[0] = f;
 
-		const u32 tp = (u32)this;
+		using _f = void(__fastcall*)(pText*, net_string*);
 
-		__asm {
-			MOV EDX, text
-			MOV ESI, tp
-			MOV ECX, ESI
-			MOV EAX, [ECX]
-			MOV EAX, [EAX + 0x30]
-			CALL DWORD PTR[EAX + 0x14]
-		}
+		_f(vtable.get_virtual(5))(this, text);
 
 	}
 
 	void set_text(std::string_view s){
 
-		const u32 text = (u32)osu::create_string(s);
+		auto* text = osu::create_string(s);
 		
 		if (text == 0)
 			return;
+
+		using _f = void(__fastcall*)(pText*, net_string*);
 		
-		const u32 tp = (u32)this;
-		
-		__asm {
-			MOV EDX, text
-			MOV ESI, tp
-			MOV ECX, ESI
-			MOV EAX, [ECX]
-			MOV EAX, [EAX + 0x30]
-			CALL DWORD PTR[EAX + 0x14]
-		}
+		_f(vtable.get_virtual(5))(this, text);
 
 	}
 
@@ -431,6 +428,12 @@ namespace osu { // All functions here require to be called from inside an osu th
 			d[1] += *(int*)(l + 6);
 		}
 		_clr_alloc(){}
+
+		u32 alloc_object(){
+			using _f = u32(__fastcall*)(u32);
+			return _f(d[1])(d[0]);
+		}
+
 	};
 
 	size_t GLOBAL_STRING_CONSTRUCT{};
@@ -453,24 +456,12 @@ namespace osu { // All functions here require to be called from inside an osu th
 			GLOBAL_STRING_CONSTRUCT = RJMP_REBASE(t);
 		}
 
-		const size_t psize = s.size();
+		using _f = net_string*(__fastcall*)(void*, char, u32);
 
-		net_string* p;
+		net_string* p = _f(GLOBAL_STRING_CONSTRUCT)(0, ' ', s.size());
 
-		__asm {
-
-			MOV EDX, 0x20 // Character to set, a space in this case.
-			XOR ECX, ECX
-			PUSH psize
-
-			CALL[GLOBAL_STRING_CONSTRUCT]
-
-			MOV p, EAX
-		}
-
-		if (p)
-			for (size_t i{}; i < psize; ++i)
-				p->text[i] = s[i];
+		for (size_t i{}; i < (p ? s.size() : 0); ++i)
+			p->text[i] = s[i];
 
 		return p;
 	}
@@ -507,24 +498,12 @@ namespace osu { // All functions here require to be called from inside an osu th
 		if (TEXTURE_LOAD_ADD == 0)
 			return resp;
 
-		const auto str_add = create_string(texture_name);
+		net_string* str = create_string(texture_name);
 
-		if (str_add) {
+		using _f = pTexture*(__fastcall*)(net_string* str, SkinSource source, u8 atlas);
 
-			__asm {
+		return str ? _f(TEXTURE_LOAD_ADD)(str, source, 0) : 0;
 
-				MOV EDX, source
-				MOV ECX, str_add
-				PUSH 0x0//use atlas
-
-				CALL[TEXTURE_LOAD_ADD]
-
-				MOV resp, EAX
-
-			}
-		}
-
-		return resp;
 	}
 
 	_clr_alloc sprite_alloc{};
@@ -559,40 +538,17 @@ namespace osu { // All functions here require to be called from inside an osu th
 
 		}
 
-		const u32 COL = std::bit_cast<u32>(colour);
+		pSprite* sprite = (pSprite*)sprite_alloc.alloc_object();
+		
+		if (sprite == 0)
+			return 0;
 
-		pSprite* sprite;
+		using _f = void(__fastcall*)(pSprite*, const pTexture*,
+			u32 tag, u32 colour, u8 always_draw, float depth, vec2 pos, u32 clock, u32 origin, u32 field);
 
-		const u32 clr_ptr = (u32)&sprite_alloc.d[0];
+		(_f(SPRITE_INITIALIZE)(sprite, texture, 0, std::bit_cast<u32>(colour), always_draw, depth, pos, clock, origin, field));
 
-		__asm {
-
-			MOV EAX, clr_ptr
-			MOV ECX, [EAX]
-			CALL [EAX + 0x4]
-			MOV sprite, EAX
-
-			MOV ESI, EAX
-
-			PUSH field
-			PUSH origin
-			PUSH clock
-			PUSH pos.y
-			PUSH pos.x
-			PUSH depth
-			PUSH always_draw
-			PUSH COL
-			PUSH 0
-			MOV EBX, texture
-			MOV EDX, EBX
-			MOV ECX, sprite
-			MOV ESI, ECX
-
-			CALL [SPRITE_INITIALIZE]
-		}
-
-		if (sprite)
-			sprite->AQM.ID = ++UNIQUE_ID;
+		sprite->AQM.ID = ++UNIQUE_ID;
 
 		return sprite;
 	}
@@ -624,14 +580,7 @@ namespace osu { // All functions here require to be called from inside an osu th
 		if (add == 0)
 			return 0;
 
-		net_event_handler* event_handler = (net_event_handler*)&clr_SystemEvent.d[0];
-
-		__asm {
-			MOV EAX, event_handler
-			MOV ECX, [EAX]
-			CALL [EAX + 0x4]
-			MOV event_handler, EAX
-		}
+		auto* event_handler = (net_event_handler*)clr_SystemEvent.alloc_object();
 
 		if (event_handler)
 			event_handler->_method_ptr = (void*)add;
@@ -701,38 +650,17 @@ namespace osu { // All functions here require to be called from inside an osu th
 
 		u32 col_value = std::bit_cast<u32>(col);
 		
-		pText* sprite;
+		auto* sprite = (pText*)pText_alloc.alloc_object();
 
-		u32 clr_ptr = (u32)&pText_alloc.d[0];
+		if (sprite) {
 
-		__asm {
+			using _f = void(__fastcall*)(pText*, net_string*,
+				u32 shadow, u32 colour, u8 always_draw, float depth, vec2 box, vec2 position, float font_size);
 
-			MOV EAX, clr_ptr
-			MOV ECX, [EAX]
-			CALL [EAX + 0x4]
-		
-			MOV sprite, EAX
-			MOV ESI, EAX
-		
-			PUSH font_size
-			PUSH position.y
-			PUSH position.x
-			PUSH box.y
-			PUSH box.x
-			PUSH depth
-			PUSH always_draw
-			PUSH col_value
-			PUSH shadow
-		
-			MOV EDX, text_ptr
-		
-			MOV ECX, ESI;
-		
-			CALL [PTEXT_INITIALIZE]
-		}
+			(_f(PTEXT_INITIALIZE)(sprite, text_ptr, shadow, std::bit_cast<u32>(col), always_draw, depth, box, position, font_size));
 
-		if (sprite)
 			sprite->AQM.ID = ++UNIQUE_ID;
+		}
 
 		return sprite;
 	}
@@ -756,14 +684,7 @@ namespace osu { // All functions here require to be called from inside an osu th
 
 		}
 
-		pTransformation* transformation = (pTransformation*)&pTransformation_alloc.d[0];
-
-		__asm {
-			MOV EAX, transformation
-			MOV ECX, [EAX]
-			CALL[EAX + 0x4]
-			MOV transformation, EAX
-		}
+		auto* transformation = (pTransformation*)pTransformation_alloc.alloc_object();
 
 		if (transformation)
 			transformation->type = type;
@@ -776,7 +697,7 @@ size_t GLOBAL_ADD_SPRITE{};
 
 struct sprite_manager {
 
-	u32 vtable;
+	_vtable vtable;
 
 	i64 last_frame_id;
 
@@ -847,18 +768,12 @@ struct sprite_manager {
 
 		}
 
-		if (!sprite_pointer || !GLOBAL_ADD_SPRITE)
+		if (this == 0 || sprite_pointer == 0|| GLOBAL_ADD_SPRITE == 0)
 			return 0;
 
-		const auto p = (size_t)this;
+		using _f = void(__fastcall*)(sprite_manager*, pSprite*);
 
-		__asm {
-			MOV ECX, p
-			MOV ESI, sprite_pointer
-			MOV EDX, ESI
-			CMP [ECX], ECX
-			CALL [GLOBAL_ADD_SPRITE]
-		}
+		(_f(GLOBAL_ADD_SPRITE)(this, sprite_pointer));
 
 		return 1;
 
@@ -959,7 +874,7 @@ struct menu_object {
 
 struct osu_HitobjectBase {
 
-	u32 vtable;
+	_vtable vtable;
 	void* __identity;
 
 	double spatial_length;
@@ -1110,7 +1025,7 @@ struct osu_Hitobject_SliderOsu : osu_Hitobject {
 
 struct osu_BeatmapBase {
 
-	u32 vtable;
+	_vtable vtable;
 	void* __identity;
 
 	double difficulty_slider_multiplier;
@@ -1247,7 +1162,7 @@ struct osu_Beatmap : osu_BeatmapBase {
 };
 
 struct osu_Hitobject_Manager_Base {
-	u32 vtable;
+	_vtable vtable;
 	void* __identity;
 	double slider_scoring_point_distance;
 	double spinner_rotation_ratio;
@@ -1330,7 +1245,7 @@ struct osu_Hitobject_Manager : osu_Hitobject_Manager_Base {
 
 struct osu_Framework_GameHost {
 
-	u32 vtable;
+	_vtable vtable;
 
 	void* window;
 	void* is_active;
@@ -1344,7 +1259,7 @@ struct osu_Framework_GameHost {
 
 struct osu_Framework_Game {
 
-	u32 vtable;
+	_vtable vtable;
 
 	osu_Framework_GameHost* host;
 
@@ -1363,7 +1278,7 @@ struct osu_Framework_Game {
 };
 
 struct osu_GameMode {
-	u32 vtable;
+	_vtable vtable;
 
 	osu_Framework_Game* game;
 
@@ -1377,7 +1292,7 @@ struct osu_Score {};
 
 struct osu_Ruleset {
 
-	u32 vtable;
+	_vtable vtable;
 
 	double HP_multiplier_combo_end;
 	double HP_multiplier_normal;
@@ -1718,9 +1633,5 @@ struct osu_GameMode_Player : osu_GameMode {
 	float pause_location[2];
 	void* star_break_additive;
 };
-
-constexpr auto dsuysais{ offsetof(osu_RulesetFruits, catcher1) };
-constexpr auto dsuysais23{ offsetof(osu_RulesetFruits, new_flashlight_overlay) };
-constexpr auto dsuysai22{ offsetof(osu_GameMode_Player, ruleset) };
 
 #pragma pack(pop)

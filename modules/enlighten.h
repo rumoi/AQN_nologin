@@ -40,14 +40,11 @@ namespace enlighten {
 
 		loaded = 1;
 
-		size_t func = (size_t)gamemode->hitobject_manager->vtable;
+		u32& func = gamemode->hitobject_manager->vtable.get_virtual(4);
 
-		func = *(size_t*)(func + 0x30);
-		func += 0x10;
+		OSU_HitObjectManager_UpdateVariables = (_osufunc_HitObjectManager_UpdateVariables)func;
 
-		OSU_HitObjectManager_UpdateVariables = (_osufunc_HitObjectManager_UpdateVariables)*(size_t*)func;
-
-		*(size_t*)func = (size_t)__HitObjectManager_UpdateVariables;
+		func = (size_t)__HitObjectManager_UpdateVariables;
 
 		osu_data.force_restart |= 1;
 
