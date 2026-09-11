@@ -182,7 +182,7 @@ namespace start_up {
 
 		constexpr auto keyboard_hook = TO_AOB("33 f6 8b 5f 04 3b f3 73 ? f6 44 37 08 80");
 
-		constexpr auto pause_check = TO_AOB("02 75 0e 80 3d ? ? ? ? 00 75 05 e9");
+		constexpr auto pause_check = TO_AOB("80 3d ? ? ? ? 00 75 05 e9 ? ? ? ? 81 3d ? ? ? ? e8 03 00 00");
 
 		constexpr auto osu_tick = TO_AOB("ff 15 ? ? ? ? 8d 7d ? 8b 35 ? ? ? ? 83 c6 04 f3 0f 7e 06");
 
@@ -199,13 +199,13 @@ namespace start_up {
 		constexpr auto update_frame = TO_AOB("ff 15 ? ? ? ? 0f b6 05 ? ? ? ? a2 ? ? ? ? 80 3d");
 
 		constexpr auto mouse_apply_handler = TO_AOB("d9 c1 d9 1c 24 d9 5d ? d9 5d ? ff 15");
-		constexpr auto pause_aob = TO_AOB("02 75 0e 80 3d ? ? ? ? 00 75 05 e9");
+		constexpr auto pause_aob = TO_AOB("80 3d ? ? ? ? 00 75 05 e9 ? ? ? ? 81 3d ? ? ? ? e8 03 00 00");
 
 		constexpr auto change_mode_aob = TO_AOB("8b 0d ? ? ? ? ba 01 00 00 00 ff 15 ? ? ? ? e9");
 
 		constexpr auto keybinding_aob = TO_AOB("ff 15 ? ? ? ? 89 ? ? 8d ? ? 50 8b 0d ? ? ? ? 8b 55 ? ? ? ff");
 
-		constexpr auto ptexture_fromrawbytes = TO_AOB("89 41 08 6a 01 ba 01 00 00 00 ff 15");
+		constexpr auto ptexture_fromrawbytes = TO_AOB("6a 01 8b 4d ? ba 01 00 00 00 ff 15 ? ? ? ? 8d 15 ? ? ? ? e8");
 
 	}
 
@@ -233,7 +233,7 @@ namespace start_up {
 
 		{
 			auto t = mem::find_ERWP_cached(0, on_load::pause_aob);
-			osu_data.is_paused = *(u8**)(t + 5);
+			osu_data.is_paused = *(u8**)(t + 2);
 			osu_data.play_mode = (int*)(osu_data.is_paused - 0x21);
 		}
 
