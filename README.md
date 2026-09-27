@@ -1,4 +1,4 @@
-![works4me](https://cdn.discordapp.com/attachments/856443153129013248/1008072091045736469/unknown.png)
+<img width="400" height="399" alt="image" src="https://github.com/user-attachments/assets/1bc98275-d3ca-4dd1-9e67-ec3dc68de1a3" />
 
 Don't use on bancho, unless you don't want your account anymore.
 
